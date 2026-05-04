@@ -38,5 +38,6 @@ dist/
 .venv
 
 # --- Sensitive Transaction Data ---
-nobitex_transfers.json
+*.json
+*.csv
 user_data/
