@@ -9,7 +9,7 @@ Strategy:
              Falls back to click-based pagination if X-Payload is per-request.
 
 Install:
-  pip install playwright playwright-stealth httpx
+  pip install playwright playwright-stealth httpx pandas
   playwright install chromium
 """
 
@@ -24,6 +24,7 @@ import pandas as pd
 import httpx
 from playwright.async_api import async_playwright, Page, BrowserContext, Request, Response
 from playwright_stealth import Stealth
+
 
 # ── Config ────────────────────────────────────────────────────────────────────
 USER_DATA_DIR   = "./user_data"          # persistent profile → survives CF cookie
@@ -456,12 +457,31 @@ def save_results(transfers: list):
 
     # CSV (flattened)
     flat = [flatten_tx(tx) for tx in transfers]
-    all_keys = list(dict.fromkeys(k for row in flat for k in row))   # ordered union
+
+    # تغییر بخش هایی از کد
+    keep_cols = [
+    "transactionHash",
+    "fromAddress.address",
+    "fromAddress.arkhamEntity.name",
+    "fromAddress.chain",
+    "fromIsContract",
+    "toAddress.address",
+    "toAddress.arkhamLabel.name",
+    "toAddress.chain",
+    "toIsContract",
+    "tokenAddress",
+    "tokenName",
+    "unitValue",
+]
+
+    filtered_flat = [{k: row.get(k) for k in keep_cols} for row in flat]
+
+    all_keys = list(dict.fromkeys(k for row in filtered_flat for k in row))   # ordered union
 
     with open(OUTPUT_CSV, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=all_keys, extrasaction="ignore")
         writer.writeheader()
-        writer.writerows(flat)
+        writer.writerows(filtered_flat)
 
     columns = [
         "id",
