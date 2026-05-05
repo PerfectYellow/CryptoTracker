@@ -543,15 +543,35 @@ def save_results(transfers: dict):
     with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
         json.dump(transfers_list, f, indent=2, ensure_ascii=False)
     print(f"\n💾  JSON → {OUTPUT_JSON}  ({len(transfers_list):,} records)")
+    flat = [flatten_tx(tx) for tx in transfers_list]
+    # all_keys = list(dict.fromkeys(k for row in flat for k in row))
 
     # CSV
-    flat = [flatten_tx(tx) for tx in transfers_list]
-    all_keys = list(dict.fromkeys(k for row in flat for k in row))
+    keep_cols = [
+        "transactionHash",
+        "fromAddress.address",
+        "fromAddress.arkhamEntity.name",
+        "fromAddress.chain",
+        "fromIsContract",
+        "toAddress.address",
+        "toAddress.arkhamLabel.name",
+        "toAddress.chain",
+        "toIsContract",
+        "tokenAddress",
+        "tokenName",
+        "unitValue",
+    ]
+
+    filtered_flat = [{k: row.get(k) for k in keep_cols} for row in flat]
+    all_keys = list(dict.fromkeys(k for row in filtered_flat for k in row))   
+
+
 
     with open(OUTPUT_CSV, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=all_keys, extrasaction="ignore")
         writer.writeheader()
-        writer.writerows(flat)
+        writer.writerows(filtered_flat)
+        # writer.writerows(flat)
 
     print(f"💾  CSV  → {OUTPUT_CSV}")
 
